@@ -126,6 +126,7 @@ describe('Watch only wallet', () => {
         height: 596736,
         value: 20000,
         address: 'bc1qhu8jqyzfazgatpctqn44xr7pdd3mdx6qy2r6xa',
+        txid: '7f3b9e032a84413d7a5027b0d020f8acf80ad28f68b5bce8fa8ac357248c5b80',
         vout: 0,
       },
     ];
