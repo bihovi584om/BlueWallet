@@ -1,5 +1,6 @@
 import bitcoin from 'bitcoinjs-lib';
 import { CoinSelectOutput, CoinSelectReturnInput } from 'coinselect';
+import { AbstractHDElectrumWallet } from './abstract-hd-electrum-wallet';
 import { HDAezeedWallet } from './hd-aezeed-wallet';
 import { HDLegacyBreadwalletWallet } from './hd-legacy-breadwallet-wallet';
 import { HDLegacyElectrumSeedP2PKHWallet } from './hd-legacy-electrum-seed-p2pkh-wallet';
@@ -97,6 +98,7 @@ export type Transaction = {
 };
 
 export type TWallet =
+  | AbstractHDElectrumWallet // should it be here?
   | HDAezeedWallet
   | HDLegacyBreadwalletWallet
   | HDLegacyElectrumSeedP2PKHWallet
@@ -114,3 +116,5 @@ export type TWallet =
   | SegwitBech32Wallet
   | SegwitP2SHWallet
   | WatchOnlyWallet;
+
+export type THDWalletForWatchOnly = HDSegwitBech32Wallet | HDSegwitP2SHWallet | HDLegacyP2PKHWallet;

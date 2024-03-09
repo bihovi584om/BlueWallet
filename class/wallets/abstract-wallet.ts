@@ -1,14 +1,7 @@
-import { BitcoinUnit, Chain } from '../../models/bitcoinUnits';
 import b58 from 'bs58check';
 import createHash from 'create-hash';
+import { BitcoinUnit, Chain } from '../../models/bitcoinUnits';
 import { CreateTransactionResult, CreateTransactionUtxo, Transaction, Utxo } from './types';
-
-type WalletStatics = {
-  type: string;
-  typeReadable: string;
-  segwitType?: 'p2wpkh' | 'p2sh(p2wpkh)';
-  derivationPath?: string;
-};
 
 type WalletWithPassphrase = AbstractWallet & { getPassphrase: () => string };
 type UtxoMetadata = {
@@ -17,8 +10,12 @@ type UtxoMetadata = {
 };
 
 export class AbstractWallet {
-  static type = 'abstract';
-  static typeReadable = 'abstract';
+  static readonly type = 'abstract';
+  static readonly typeReadable = 'abstract';
+  // @ts-ignore: override
+  public readonly type = AbstractWallet.type;
+  // @ts-ignore: override
+  public readonly typeReadable = AbstractWallet.typeReadable;
 
   static fromJson(obj: string): AbstractWallet {
     const obj2 = JSON.parse(obj);
@@ -31,8 +28,6 @@ export class AbstractWallet {
     return temp;
   }
 
-  type: string;
-  typeReadable: string;
   segwitType?: 'p2wpkh' | 'p2sh(p2wpkh)';
   _derivationPath?: string;
   label: string;
@@ -53,11 +48,6 @@ export class AbstractWallet {
   masterFingerprint: number | false;
 
   constructor() {
-    const Constructor = this.constructor as unknown as WalletStatics;
-
-    this.type = Constructor.type;
-    this.typeReadable = Constructor.typeReadable;
-    this.segwitType = Constructor.segwitType;
     this.label = '';
     this.secret = ''; // private key or recovery phrase
     this.balance = 0;
