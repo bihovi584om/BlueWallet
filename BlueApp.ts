@@ -255,6 +255,7 @@ export class AppStorage {
     ];
     // @ts-ignore schema doesn't match Realm's schema type
     return Realm.open({
+      // @ts-ignore schema doesn't match Realm's schema type
       schema,
       path,
       encryptionKey,
@@ -295,6 +296,7 @@ export class AppStorage {
     ];
     // @ts-ignore schema doesn't match Realm's schema type
     return Realm.open({
+      // @ts-ignore schema doesn't match Realm's schema type
       schema,
       path,
       encryptionKey,
