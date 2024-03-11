@@ -45,7 +45,7 @@ export class AbstractWallet {
   _hideTransactionsInWalletsList: boolean;
   _utxoMetadata: Record<string, UtxoMetadata>;
   use_with_hardware_wallet: boolean;
-  masterFingerprint: number | false;
+  masterFingerprint: number;
 
   constructor() {
     this.label = '';
@@ -63,7 +63,7 @@ export class AbstractWallet {
     this._hideTransactionsInWalletsList = false;
     this._utxoMetadata = {};
     this.use_with_hardware_wallet = false;
-    this.masterFingerprint = false;
+    this.masterFingerprint = 0;
   }
 
   /**
@@ -251,7 +251,7 @@ export class AbstractWallet {
         parsedSecret = JSON.parse(newSecret);
       }
       if (parsedSecret && parsedSecret.keystore && parsedSecret.keystore.xpub) {
-        let masterFingerprint: number | false = false;
+        let masterFingerprint: number = 0;
         if (parsedSecret.keystore.ckcc_xfp) {
           // It is a ColdCard Hardware Wallet
           masterFingerprint = Number(parsedSecret.keystore.ckcc_xfp);

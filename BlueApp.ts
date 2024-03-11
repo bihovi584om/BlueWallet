@@ -462,7 +462,7 @@ export class AppStorage {
     const tempWallets = [];
 
     if (wallet.type === LightningLdkWallet.type) {
-      const ldkwallet = wallet as LightningLdkWallet;
+      const ldkwallet = wallet;
       ldkwallet.stop().then(ldkwallet.purgeLocalStorage).catch(alert);
     }
 
@@ -483,31 +483,31 @@ export class AppStorage {
     const transactionsForWallet = transactions.filtered(`walletid = "${walletToInflate.getID()}"`) as unknown as TRealmTransaction[];
     for (const tx of transactionsForWallet) {
       if (tx.internal === false) {
-        if (walletToInflate.type === WatchOnlyWallet.type && walletToInflate._hdWalletInstance) {
+        if ('_hdWalletInstance' in walletToInflate && walletToInflate._hdWalletInstance) {
           const hd = walletToInflate._hdWalletInstance;
           hd._txs_by_external_index[tx.index] = hd._txs_by_external_index[tx.index] || [];
-          const transaction = JSON.parse(tx.tx) as Transaction;
-          (hd._txs_by_external_index[tx.index] as Transaction[]).push(transaction);
+          const transaction = JSON.parse(tx.tx);
+          hd._txs_by_external_index[tx.index].push(transaction);
         } else {
           walletToInflate._txs_by_external_index[tx.index] = walletToInflate._txs_by_external_index[tx.index] || [];
-          const transaction = JSON.parse(tx.tx) as Transaction;
+          const transaction = JSON.parse(tx.tx);
           (walletToInflate._txs_by_external_index[tx.index] as Transaction[]).push(transaction);
         }
       } else if (tx.internal === true) {
-        if (walletToInflate.type === WatchOnlyWallet.type && walletToInflate._hdWalletInstance) {
+        if ('_hdWalletInstance' in walletToInflate && walletToInflate._hdWalletInstance) {
           const hd = walletToInflate._hdWalletInstance;
           hd._txs_by_internal_index[tx.index] = hd._txs_by_internal_index[tx.index] || [];
-          const transaction = JSON.parse(tx.tx) as Transaction;
-          (hd._txs_by_internal_index[tx.index] as Transaction[]).push(transaction);
+          const transaction = JSON.parse(tx.tx);
+          hd._txs_by_internal_index[tx.index].push(transaction);
         } else {
           walletToInflate._txs_by_internal_index[tx.index] = walletToInflate._txs_by_internal_index[tx.index] || [];
-          const transaction = JSON.parse(tx.tx) as Transaction;
+          const transaction = JSON.parse(tx.tx);
           (walletToInflate._txs_by_internal_index[tx.index] as Transaction[]).push(transaction);
         }
       } else {
         if (!Array.isArray(walletToInflate._txs_by_external_index)) walletToInflate._txs_by_external_index = [];
         walletToInflate._txs_by_external_index = walletToInflate._txs_by_external_index || [];
-        const transaction = JSON.parse(tx.tx) as Transaction;
+        const transaction = JSON.parse(tx.tx);
         (walletToInflate._txs_by_external_index as Transaction[]).push(transaction);
       }
     }
@@ -515,9 +515,8 @@ export class AppStorage {
 
   offloadWalletToRealm(realm: Realm, wallet: TWallet): void {
     const id = wallet.getID();
-    const walletToSave = (wallet.type === WatchOnlyWallet.type && wallet._hdWalletInstance) ?? wallet;
+    const walletToSave = ('_hdWalletInstance' in wallet && wallet._hdWalletInstance) || wallet;
 
-    // @ts-ignore: wallet._txs_by_internal_index
     if (Array.isArray(walletToSave._txs_by_external_index)) {
       // if this var is an array that means its a single-address wallet class, and this var is a flat array
       // with transactions
@@ -544,7 +543,6 @@ export class AppStorage {
 
     /// ########################################################################################################
 
-    // @ts-ignore: wallet._txs_by_internal_index
     if (walletToSave._txs_by_external_index) {
       realm.write(() => {
         // cleanup all existing transactions for the wallet first
@@ -552,7 +550,6 @@ export class AppStorage {
         realm.delete(walletTransactionsToDelete);
 
         // insert new ones:
-        // @ts-ignore: wallet._txs_by_internal_index
         for (const index of Object.keys(walletToSave._txs_by_external_index)) {
           // @ts-ignore index is number
           const txs = walletToSave._txs_by_external_index[index];
@@ -570,7 +567,6 @@ export class AppStorage {
           }
         }
 
-        // @ts-ignore: wallet._txs_by_internal_index
         for (const index of Object.keys(walletToSave._txs_by_internal_index)) {
           // @ts-ignore index is number
           const txs = walletToSave._txs_by_internal_index[index];
@@ -621,7 +617,7 @@ export class AppStorage {
         // @ts-ignore wtf is wallet.current? Does it even exist?
         delete key.current;
         const keyCloned = Object.assign({}, key); // stripped-down version of a wallet to save to secure keystore
-        if (key.type === WatchOnlyWallet.type && key._hdWalletInstance) {
+        if ('_hdWalletInstance' in key) {
           const k = keyCloned as any & WatchOnlyWallet;
           k._hdWalletInstance = Object.assign({}, key._hdWalletInstance);
           k._hdWalletInstance._txs_by_external_index = {};
@@ -634,9 +630,7 @@ export class AppStorage {
           keyCloned._txs_by_internal_index = {};
         }
 
-        // @ts-ignore: _bip47_instance
-        if (keyCloned._bip47_instance) {
-          // @ts-ignore: _bip47_instance
+        if ('_bip47_instance' in keyCloned) {
           delete keyCloned._bip47_instance; // since it wont be restored into a proper class instance
         }
 
@@ -743,7 +737,7 @@ export class AppStorage {
         if (c++ === index) {
           await wallet.fetchTransactions();
 
-          if (wallet.type === LightningLdkWallet.type || wallet.type === LightningCustodianWallet.type) {
+          if ('fetchPendingTransactions' in wallet) {
             await wallet.fetchPendingTransactions();
             await wallet.fetchUserInvoices();
           }
@@ -752,7 +746,7 @@ export class AppStorage {
     } else {
       for (const wallet of this.wallets) {
         await wallet.fetchTransactions();
-        if (wallet.type === LightningLdkWallet.type || wallet.type === LightningCustodianWallet.type) {
+        if ('fetchPendingTransactions' in wallet) {
           await wallet.fetchPendingTransactions();
           await wallet.fetchUserInvoices();
         }
@@ -763,18 +757,17 @@ export class AppStorage {
   fetchSenderPaymentCodes = async (index?: number) => {
     console.log('fetchSenderPaymentCodes for wallet#', typeof index === 'undefined' ? '(all)' : index);
     if (index || index === 0) {
+      const wallet = this.wallets[index];
       try {
-        if (!(this.wallets[index].allowBIP47() && this.wallets[index].isBIP47Enabled())) return;
-        // @ts-ignore remove this after class/wallets typescript migration
-        await this.wallets[index].fetchBIP47SenderPaymentCodes();
+        if (!(wallet.allowBIP47() && wallet.isBIP47Enabled() && 'fetchBIP47SenderPaymentCodes' in wallet)) return;
+        await wallet.fetchBIP47SenderPaymentCodes();
       } catch (error) {
         console.error('Failed to fetch sender payment codes for wallet', index, error);
       }
     } else {
       for (const wallet of this.wallets) {
         try {
-          if (!(wallet.allowBIP47() && wallet.isBIP47Enabled())) continue;
-          // @ts-ignore remove this after class/wallets typescript migration
+          if (!(wallet.allowBIP47() && wallet.isBIP47Enabled() && 'fetchBIP47SenderPaymentCodes' in wallet)) continue;
           await wallet.fetchBIP47SenderPaymentCodes();
         } catch (error) {
           console.error('Failed to fetch sender payment codes for wallet', wallet.label, error);

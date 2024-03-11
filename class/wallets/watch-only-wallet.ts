@@ -6,10 +6,9 @@ import { HDLegacyP2PKHWallet } from './hd-legacy-p2pkh-wallet';
 import { HDSegwitBech32Wallet } from './hd-segwit-bech32-wallet';
 import { HDSegwitP2SHWallet } from './hd-segwit-p2sh-wallet';
 import { LegacyWallet } from './legacy-wallet';
+import { THDWalletForWatchOnly } from './types';
 
 const bip32 = BIP32Factory(ecc);
-
-type THDWallet = HDLegacyP2PKHWallet | HDSegwitP2SHWallet | HDSegwitBech32Wallet;
 
 export class WatchOnlyWallet extends LegacyWallet {
   static readonly type = 'watchOnly';
@@ -19,9 +18,9 @@ export class WatchOnlyWallet extends LegacyWallet {
   // @ts-ignore: override
   public readonly typeReadable = WatchOnlyWallet.typeReadable;
 
-  public _hdWalletInstance?: THDWallet;
+  public _hdWalletInstance?: THDWalletForWatchOnly;
   use_with_hardware_wallet = false;
-  masterFingerprint: number | false = false;
+  masterFingerprint: number = 0;
 
   /**
    * @inheritDoc
@@ -72,7 +71,7 @@ export class WatchOnlyWallet extends LegacyWallet {
    * this is needed after serialization/save/load/deserialization procedure.
    */
   init() {
-    let hdWalletInstance: HDLegacyP2PKHWallet | HDSegwitP2SHWallet | HDSegwitBech32Wallet;
+    let hdWalletInstance: THDWalletForWatchOnly;
     if (this.secret.startsWith('xpub')) hdWalletInstance = new HDLegacyP2PKHWallet();
     else if (this.secret.startsWith('ypub')) hdWalletInstance = new HDSegwitP2SHWallet();
     else if (this.secret.startsWith('zpub')) hdWalletInstance = new HDSegwitBech32Wallet();
@@ -176,17 +175,17 @@ export class WatchOnlyWallet extends LegacyWallet {
     throw new Error('Not initialized');
   }
 
-  getUtxo(...args: Parameters<THDWallet['getUtxo']>) {
+  getUtxo(...args: Parameters<THDWalletForWatchOnly['getUtxo']>) {
     if (this._hdWalletInstance) return this._hdWalletInstance.getUtxo(...args);
     throw new Error('Not initialized');
   }
 
-  combinePsbt(...args: Parameters<THDWallet['combinePsbt']>) {
+  combinePsbt(...args: Parameters<THDWalletForWatchOnly['combinePsbt']>) {
     if (this._hdWalletInstance) return this._hdWalletInstance.combinePsbt(...args);
     throw new Error('Not initialized');
   }
 
-  broadcastTx(...args: Parameters<THDWallet['broadcastTx']>) {
+  broadcastTx(...args: Parameters<THDWalletForWatchOnly['broadcastTx']>) {
     if (this._hdWalletInstance) return this._hdWalletInstance.broadcastTx(...args);
     throw new Error('Not initialized');
   }
@@ -195,10 +194,10 @@ export class WatchOnlyWallet extends LegacyWallet {
    * signature of this method is the same ad BIP84 createTransaction, BUT this method should be used to create
    * unsinged PSBT to be used with HW wallet (or other external signer)
    */
-  createTransaction(...args: Parameters<THDWallet['createTransaction']>) {
+  createTransaction(...args: Parameters<THDWalletForWatchOnly['createTransaction']>) {
     const [utxos, targets, feeRate, changeAddress, sequence] = args;
     if (this._hdWalletInstance && this.isHd()) {
-      const masterFingerprint = this.getMasterFingerprint() || 0;
+      const masterFingerprint = this.getMasterFingerprint();
       return this._hdWalletInstance.createTransaction(utxos, targets, feeRate, changeAddress, sequence, true, masterFingerprint);
     } else {
       throw new Error('Not a HD watch-only wallet, cant create PSBT (or just not initialized)');
@@ -286,27 +285,27 @@ export class WatchOnlyWallet extends LegacyWallet {
     return false;
   }
 
-  addressIsChange(...args: Parameters<THDWallet['addressIsChange']>) {
+  addressIsChange(...args: Parameters<THDWalletForWatchOnly['addressIsChange']>) {
     if (this._hdWalletInstance) return this._hdWalletInstance.addressIsChange(...args);
     return super.addressIsChange(...args);
   }
 
-  getUTXOMetadata(...args: Parameters<THDWallet['getUTXOMetadata']>) {
+  getUTXOMetadata(...args: Parameters<THDWalletForWatchOnly['getUTXOMetadata']>) {
     if (this._hdWalletInstance) return this._hdWalletInstance.getUTXOMetadata(...args);
     return super.getUTXOMetadata(...args);
   }
 
-  setUTXOMetadata(...args: Parameters<THDWallet['setUTXOMetadata']>) {
+  setUTXOMetadata(...args: Parameters<THDWalletForWatchOnly['setUTXOMetadata']>) {
     if (this._hdWalletInstance) return this._hdWalletInstance.setUTXOMetadata(...args);
     return super.setUTXOMetadata(...args);
   }
 
-  getDerivationPath(...args: Parameters<THDWallet['getDerivationPath']>) {
+  getDerivationPath(...args: Parameters<THDWalletForWatchOnly['getDerivationPath']>) {
     if (this._hdWalletInstance) return this._hdWalletInstance.getDerivationPath(...args);
     throw new Error("Not a HD watch-only wallet, can't use derivation path");
   }
 
-  setDerivationPath(...args: Parameters<THDWallet['setDerivationPath']>) {
+  setDerivationPath(...args: Parameters<THDWalletForWatchOnly['setDerivationPath']>) {
     if (this._hdWalletInstance) return this._hdWalletInstance.setDerivationPath(...args);
     throw new Error("Not a HD watch-only wallet, can't use derivation path");
   }

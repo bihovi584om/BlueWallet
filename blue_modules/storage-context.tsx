@@ -69,7 +69,6 @@ interface BlueStorageContextType {
   setItem: typeof BlueApp.setItem;
 }
 
-// export const WalletTransactionsStatus = { NONE: false, ALL: true };
 export enum WalletTransactionsStatus {
   NONE = 'NONE',
   ALL = 'ALL',

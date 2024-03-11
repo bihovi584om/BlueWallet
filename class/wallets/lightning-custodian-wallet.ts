@@ -3,41 +3,6 @@ import Frisbee from 'frisbee';
 import bolt11 from 'bolt11';
 import { BitcoinUnit, Chain } from '../../models/bitcoinUnits';
 
-// type TTxRaw = {
-//   fee: number;
-//   fee_msat: number;
-//   memo: string;
-//   payment_hash: string;
-//   payment_preimage: string;
-//   received: string;
-//   timestamp: number;
-//   type: 'paid_invoice' | 'bitcoind_tx' | 'user_invoice';
-//   value: number;
-//   walletID: string;
-//   walletPreferredBalanceUnit: string;
-// };
-
-// type TInvoiceRaw = {
-//   add_index: string;
-//   amt: number;
-//   description: string;
-//   expire_time: number;
-//   ispaid: boolean;
-//   memo: string;
-//   payment_hash: string;
-//   payment_request: string;
-//   r_hash: {
-//     data: number[];
-//     type: string;
-//   };
-//   received: string;
-//   timestamp: number;
-//   type: 'user_invoice';
-//   value: number;
-//   walletID: string;
-//   walletPreferredBalanceUnit: string;
-// };
-
 export class LightningCustodianWallet extends LegacyWallet {
   static readonly type = 'lightningCustodianWallet';
   static readonly typeReadable = 'Lightning';
@@ -55,7 +20,7 @@ export class LightningCustodianWallet extends LegacyWallet {
   pending_transactions_raw: any[] = [];
   transactions_raw: any[] = [];
   user_invoices_raw: any[] = [];
-  // info_raw = false;
+  info_raw = false;
   preferredBalanceUnit = BitcoinUnit.SATS;
   chain = Chain.OFFCHAIN;
   private _api?: Frisbee;
@@ -64,7 +29,6 @@ export class LightningCustodianWallet extends LegacyWallet {
 
   constructor() {
     super();
-    // this.setBaseURI(); // no args to init with default value
     this.init();
   }
 
@@ -545,7 +509,6 @@ export class LightningCustodianWallet extends LegacyWallet {
       throw new Error('API unexpected response: ' + JSON.stringify(response.body));
     }
 
-    // this.balance_raw = json;
     this.balance = json.BTC.AvailableBalance;
     this._lastBalanceFetch = +new Date();
   }
